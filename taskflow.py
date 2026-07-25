@@ -2,7 +2,6 @@ import sys
 import os
 import calendar
 import smtplib
-import urllib.request
 from datetime import date, datetime, timedelta
 import connection as db
 
@@ -604,30 +603,19 @@ def delete_event():
 
 def import_ics():
     print("")
-    source = input("  Enter .ics absolute filename or web URL link: ").strip()
+    source = input("  Enter .ics file path: ").strip()
     if source == "":
         return
 
-    all_lines = []
-    if source.startswith("http://") or source.startswith("https://"):
-        try:
-            req = urllib.request.Request(source, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req) as response:
-                content = response.read().decode('utf-8')
-                all_lines = content.splitlines()
-        except Exception:
-            print("  Could not download calendar from web URL link.")
-            return
-    else:
-        if not os.path.exists(source):
-            print("  File not found.")
-            return
-        try:
-            with open(source, encoding='utf-8') as ics_file:
-                all_lines = ics_file.readlines()
-        except Exception:
-            print("  Could not read file.")
-            return
+    if not os.path.exists(source):
+        print("  File not found.")
+        return
+    try:
+        with open(source, encoding='utf-8') as ics_file:
+            all_lines = ics_file.readlines()
+    except Exception:
+        print("  Could not read file.")
+        return
 
     others_category_id = db.get_category_id("Others")
     title = ""
