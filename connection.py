@@ -16,7 +16,7 @@ cursor = connection.cursor(buffered=True)
 
 def setup():                  #Read schema.sql and create the tables if they don't exist.
     folder = os.path.dirname(os.path.abspath(__file__))
-    schema_path = os.path.join(folder, "schema.sql")
+    schema_path = os.path.join(folder, "databse.sql")
     schema_file = open(schema_path)
     full_sql = schema_file.read()
     schema_file.close()
