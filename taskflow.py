@@ -6,122 +6,36 @@ import urllib.request
 from datetime import date, datetime, timedelta
 import connection as db
 
-# To email reminders, put a Gmail address and its 16-character App Password here.
-# Leave them empty and reminders will just show as desktop notifications.
+
+# ==============================================================================
+# MODULE 1: REMINDERS & EMAIL NOTIFICATIONS (KINGSLEY)
+# ==============================================================================
+
 SENDER_EMAIL        = ""
 SENDER_APP_PASSWORD = ""
-CURRENT_USER        = "Planner"
 
 
-class Event:
-    """Represents an Event object in TaskFlow (OOP Data Model)."""
-    def __init__(self, event_id, title, event_date, event_time, details, status, category_name, owner_name="Planner"):
-        self.id = event_id
-        self.title = title
-        self.event_date = event_date
-        self.event_time = event_time
-        self.details = details
-        self.status = status
-        self.category_name = category_name
-        self.owner_name = owner_name
+class ReminderService:
+    """Handles desktop notifications and email sending for TaskFlow."""
+    @staticmethod
+    def notify_desktop(title, message):
+        if sys.platform != "win32":
+            os.system(f'notify-send "{title}" "{message}"')
 
-    @classmethod
-    def from_row(cls, row):
-        if not row:
-            return None
-        owner_name = row[7] if len(row) > 7 and row[7] else "Planner"
-        return cls(row[0], row[1], row[2], row[3], row[4], row[5], row[6], owner_name)
-
-
-def select_user_identity():
-    global CURRENT_USER
-    all_members = db.get_all_members()
-    print("")
-    print("  +-----------------------------+")
-    print("  |      Who are you?           |")
-    print("  +-----------------------------+")
-    number = 1
-    for member in all_members:
-        print(f"   {number}) {member[1]}")
-        number += 1
-    print(f"   {number}) + Register New Member")
-    print("  -----------------------------")
-    print("")
-    choice = input("  Pick your name number: ").strip()
-    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(all_members) + 1:
-        choice = input("  Invalid. Pick your name number: ").strip()
-
-    if int(choice) == len(all_members) + 1:
-        new_name = input("  Enter your name: ").strip()
-        if new_name != "":
-            db.add_member(new_name)
-            CURRENT_USER = new_name
-        else:
-            CURRENT_USER = "Planner"
-    else:
-        CURRENT_USER = all_members[int(choice) - 1][1]
-
-    print(f"\n  Logged in as: {CURRENT_USER}")
-
-
-def is_valid_date(text):
-    parts = text.split("-")
-    if len(parts) != 3:
-        return False
-    year_part = parts[0]
-    month_part = parts[1]
-    day_part = parts[2]
-    if not year_part.isdigit():
-        return False
-    if not month_part.isdigit():
-        return False
-    if not day_part.isdigit():
-        return False
-    if len(year_part) != 4:
-        return False
-    if int(month_part) < 1 or int(month_part) > 12:
-        return False
-    if int(day_part) < 1 or int(day_part) > 31:
-        return False
-    return True
-
-
-def format_time(text):
-    cleaned = text.strip().lower()
-    if cleaned in ["all", "all day", "allday", "all-day", ""]:
-        return "ALL DAY"
-    parts = cleaned.split(":")
-    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
-        return "%02d:%02d" % (int(parts[0]), int(parts[1]))
-    return text
-
-
-def is_valid_time(text):
-    cleaned = text.strip().lower()
-    if cleaned in ["all", "all day", "allday", "all-day", ""]:
-        return True
-    parts = cleaned.split(":")
-    if len(parts) != 2:
-        return False
-    hour_part = parts[0]
-    minute_part = parts[1]
-    if not hour_part.isdigit() or not minute_part.isdigit():
-        return False
-    if int(hour_part) < 0 or int(hour_part) > 23:
-        return False
-    if int(minute_part) < 0 or int(minute_part) > 59:
-        return False
-    return True
-
-
-def get_event_status(saved_status, event_date, today):
-    if saved_status == "done":
-        return "done"
-    if event_date < today:
-        return "due"
-    if event_date == today:
-        return "ongoing"
-    return "pending"
+    @staticmethod
+    def send_email(to_email, subject, body):
+        load_email_config()
+        if not SENDER_EMAIL or not SENDER_APP_PASSWORD:
+            return
+        try:
+            full_message = f"From: {SENDER_EMAIL}\nTo: {to_email}\nSubject: {subject}\n\n{body}"
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
+            server.sendmail(SENDER_EMAIL, to_email, full_message)
+            server.quit()
+        except:
+            pass
 
 
 def load_email_config():
@@ -180,31 +94,146 @@ def check_email_setup_on_startup():
                 f.write("disabled\n")
 
 
-class ReminderService:
-    """Handles desktop notifications and email sending for TaskFlow."""
-    @staticmethod
-    def notify_desktop(title, message):
-        if sys.platform != "win32":
-            os.system(f'notify-send "{title}" "{message}"')
-
-    @staticmethod
-    def send_email(to_email, subject, body):
-        load_email_config()
-        if not SENDER_EMAIL or not SENDER_APP_PASSWORD:
-            return
-        try:
-            full_message = f"From: {SENDER_EMAIL}\nTo: {to_email}\nSubject: {subject}\n\n{body}"
-            server = smtplib.SMTP("smtp.gmail.com", 587)
-            server.starttls()
-            server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
-            server.sendmail(SENDER_EMAIL, to_email, full_message)
-            server.quit()
-        except:
-            pass
-
-
 def send_email(to_email, subject, body):
     ReminderService.send_email(to_email, subject, body)
+
+
+def check_upcoming():
+    today = str(date.today())
+    tomorrow = str(date.today() + timedelta(days=1))
+    current_time = datetime.now().strftime("%H:%M")
+    events = db.get_events_on_dates(today, tomorrow)
+    upcoming = []
+    for event in events:
+        event_date = event[2]
+        event_time = format_time(event[3])
+        status = event[4]
+
+        if status == "done":
+            continue
+        if event_date == today and event_time != "ALL DAY" and event_time < current_time:
+            continue
+        upcoming.append(event)
+
+    if len(upcoming) == 0:
+        return
+
+    print("")
+    print("  -----------------------------------------")
+    print("             Upcoming Reminders!           ")
+    print("  -----------------------------------------")
+    for event in upcoming:
+        event_id = event[0]
+        title = event[1]
+        event_date = event[2]
+        event_time = format_time(event[3])
+        when = "TODAY" if event_date == today else "TOMORROW"
+        print(f"   • {title} ({when} at {event_time})")
+
+        message = f"{title} is happening {when} at {event_time}"
+        ReminderService.notify_desktop("TaskFlow Reminder", message)
+
+        attendee_emails = db.get_attendee_emails(event_id)
+        for one_email in attendee_emails:
+            ReminderService.send_email(
+                one_email,
+                f"Reminder: {title}",
+                f"Hi, this is a friendly reminder that '{title}' is happening {when} at {event_time}. Please remind your friend!"
+            )
+    print("  -----------------------------------------")
+
+
+def send_reminders():
+    check_upcoming()
+
+
+# ==============================================================================
+# MODULE 2: USER IDENTITY & ROLE AUTHENTICATION (FELIX)
+# ==============================================================================
+
+CURRENT_USER = "Planner"
+
+
+def select_user_identity():
+    global CURRENT_USER
+    all_members = db.get_all_members()
+    print("")
+    print("  +-----------------------------+")
+    print("  |      Who are you?           |")
+    print("  +-----------------------------+")
+    number = 1
+    for member in all_members:
+        print(f"   {number}) {member[1]}")
+        number += 1
+    print(f"   {number}) + Register New Member")
+    print("  -----------------------------")
+    print("")
+    choice = input("  Pick your name number: ").strip()
+    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(all_members) + 1:
+        choice = input("  Invalid. Pick your name number: ").strip()
+
+    if int(choice) == len(all_members) + 1:
+        new_name = input("  Enter your name: ").strip()
+        if new_name != "":
+            db.add_member(new_name)
+            CURRENT_USER = new_name
+        else:
+            CURRENT_USER = "Planner"
+    else:
+        CURRENT_USER = all_members[int(choice) - 1][1]
+
+    print(f"\n  Logged in as: {CURRENT_USER}")
+
+
+def pick_role():
+    print("")
+    print("  +-----------------------------------------+")
+    print("  |                                         |")
+    print("  |      Welcome to TaskFlow Planner        |")
+    print("  |                                         |")
+    print("  +-----------------------------------------+")
+    print("")
+    print("  Choose your role:")
+    print("  " + "-" * 41)
+    print("  1) Planner  -  full access")
+    print("  2) Viewer   -  view and search only")
+    print("  " + "-" * 41)
+    print("")
+    choice = input("  Enter 1 or 2: ").strip()
+    while choice != "1" and choice != "2":
+        choice = input("  Please enter 1 or 2: ").strip()
+    if choice == "1":
+        print("")
+        print("  Logged in as Planner.")
+        return "planner"
+    else:
+        print("")
+        print("  Logged in as Viewer.")
+        return "viewer"
+
+
+# ==============================================================================
+# MODULE 3: EVENT CREATION & CATEGORY MANAGEMENT (VANESSA)
+# ==============================================================================
+
+class Event:
+    """Represents an Event object in TaskFlow (OOP Data Model)."""
+    def __init__(self, event_id, title, event_date, event_time, details, status, category_name, owner_name="Planner"):
+        self.id = event_id
+        self.title = title
+        self.event_date = event_date
+        self.event_time = event_time
+        self.details = details
+        self.status = status
+        self.category_name = category_name
+        self.owner_name = owner_name
+
+    @classmethod
+    def from_row(cls, row):
+        if not row:
+            return None
+        owner_name = row[7] if len(row) > 7 and row[7] else "Planner"
+        return cls(row[0], row[1], row[2], row[3], row[4], row[5], row[6], owner_name)
 
 
 def choose_category():
@@ -256,6 +285,86 @@ def add_event():
             db.add_attendee(new_event_id, one_email)
         print("  Emails added.")
 
+
+def manage_categories():
+    print("")
+    all_categories = db.get_all_categories()
+    print("  Current Categories:")
+    print("  -----------------------------")
+    for category in all_categories:
+        print(f"   - {category[1]}")
+    print("  -----------------------------")
+    print("")
+    name = input("  Enter new category name (or Enter to go back): ").strip()
+    if name == "":
+        return
+    db.add_category(name)
+    print(f"  Category '{name}' added!")
+
+
+# ==============================================================================
+# MODULE 4: DATA VALIDATION & STATUS ENGINE (RITA)
+# ==============================================================================
+
+def is_valid_date(text):
+    parts = text.split("-")
+    if len(parts) != 3:
+        return False
+    year_part = parts[0]
+    month_part = parts[1]
+    day_part = parts[2]
+    if not year_part.isdigit() or not month_part.isdigit() or not day_part.isdigit():
+        return False
+    if len(year_part) != 4:
+        return False
+    if int(month_part) < 1 or int(month_part) > 12:
+        return False
+    if int(day_part) < 1 or int(day_part) > 31:
+        return False
+    return True
+
+
+def format_time(text):
+    cleaned = text.strip().lower()
+    if cleaned in ["all", "all day", "allday", "all-day", ""]:
+        return "ALL DAY"
+    parts = cleaned.split(":")
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        return "%02d:%02d" % (int(parts[0]), int(parts[1]))
+    return text
+
+
+def is_valid_time(text):
+    cleaned = text.strip().lower()
+    if cleaned in ["all", "all day", "allday", "all-day", ""]:
+        return True
+    parts = cleaned.split(":")
+    if len(parts) != 2:
+        return False
+    hour_part = parts[0]
+    minute_part = parts[1]
+    if not hour_part.isdigit() or not minute_part.isdigit():
+        return False
+    if int(hour_part) < 0 or int(hour_part) > 23:
+        return False
+    if int(minute_part) < 0 or int(minute_part) > 59:
+        return False
+    return True
+
+
+def get_event_status(saved_status, event_date, today):
+    if saved_status == "done":
+        return "done"
+    if event_date < today:
+        return "due"
+    if event_date == today:
+        return "ongoing"
+    return "pending"
+
+
+# ==============================================================================
+# MODULE 5: CALENDAR DISPLAY & TABLE RENDERER (GABRIEL)
+# ==============================================================================
 
 def show_event_list():
     raw_events = db.get_user_events(CURRENT_USER)
@@ -380,6 +489,10 @@ def view_member_calendar():
     print("  -------------------------------------------------------------------------")
     print("")
 
+
+# ==============================================================================
+# MODULE 6: SEARCH, EDIT, DELETE & ICS IMPORTS (LILIAN)
+# ==============================================================================
 
 def search_events():
     print("")
@@ -513,97 +626,9 @@ def import_ics():
     print(f"  Imported {imported_count} event(s).")
 
 
-def manage_categories():
-    print("")
-    all_categories = db.get_all_categories()
-    print("  Current Categories:")
-    print("  -----------------------------")
-    for category in all_categories:
-        print(f"   - {category[1]}")
-    print("  -----------------------------")
-    print("")
-    name = input("  Enter new category name (or Enter to go back): ").strip()
-    if name == "":
-        return
-    db.add_category(name)
-    print(f"  Category '{name}' added!")
-
-
-def check_upcoming():
-    today = str(date.today())
-    tomorrow = str(date.today() + timedelta(days=1))
-    current_time = datetime.now().strftime("%H:%M")
-    events = db.get_events_on_dates(today, tomorrow)
-    upcoming = []
-    for event in events:
-        event_date = event[2]
-        event_time = format_time(event[3])
-        status = event[4]
-
-        if status == "done":
-            continue
-        if event_date == today and event_time != "ALL DAY" and event_time < current_time:
-            continue
-        upcoming.append(event)
-
-    if len(upcoming) == 0:
-        return
-
-    print("")
-    print("  -----------------------------------------")
-    print("             Upcoming Reminders!           ")
-    print("  -----------------------------------------")
-    for event in upcoming:
-        event_id = event[0]
-        title = event[1]
-        event_date = event[2]
-        event_time = format_time(event[3])
-        when = "TODAY" if event_date == today else "TOMORROW"
-        print(f"   • {title} ({when} at {event_time})")
-
-        message = f"{title} is happening {when} at {event_time}"
-        ReminderService.notify_desktop("TaskFlow Reminder", message)
-
-        attendee_emails = db.get_attendee_emails(event_id)
-        for one_email in attendee_emails:
-            ReminderService.send_email(
-                one_email,
-                f"Reminder: {title}",
-                f"Hi, this is a friendly reminder that '{title}' is happening {when} at {event_time}. Please remind your friend!"
-            )
-    print("  -----------------------------------------")
-
-
-def send_reminders():
-    check_upcoming()
-
-
-def pick_role():
-    print("")
-    print("  +-----------------------------------------+")
-    print("  |                                         |")
-    print("  |      Welcome to TaskFlow Planner        |")
-    print("  |                                         |")
-    print("  +-----------------------------------------+")
-    print("")
-    print("  Choose your role:")
-    print("  " + "-" * 41)
-    print("  1) Planner  -  full access")
-    print("  2) Viewer   -  view and search only")
-    print("  " + "-" * 41)
-    print("")
-    choice = input("  Enter 1 or 2: ").strip()
-    while choice != "1" and choice != "2":
-        choice = input("  Please enter 1 or 2: ").strip()
-    if choice == "1":
-        print("")
-        print("  Logged in as Planner.")
-        return "planner"
-    else:
-        print("")
-        print("  Logged in as Viewer.")
-        return "viewer"
-
+# ==============================================================================
+# CLI MENUS & APPLICATION ENTRY POINT
+# ==============================================================================
 
 def planner_menu():
     while True:
