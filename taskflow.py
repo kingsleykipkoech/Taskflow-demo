@@ -180,19 +180,31 @@ def check_email_setup_on_startup():
                 f.write("disabled\n")
 
 
+class ReminderService:
+    """Handles desktop notifications and email sending for TaskFlow."""
+    @staticmethod
+    def notify_desktop(title, message):
+        if sys.platform != "win32":
+            os.system(f'notify-send "{title}" "{message}"')
+
+    @staticmethod
+    def send_email(to_email, subject, body):
+        load_email_config()
+        if not SENDER_EMAIL or not SENDER_APP_PASSWORD:
+            return
+        try:
+            full_message = f"From: {SENDER_EMAIL}\nTo: {to_email}\nSubject: {subject}\n\n{body}"
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
+            server.sendmail(SENDER_EMAIL, to_email, full_message)
+            server.quit()
+        except:
+            pass
+
+
 def send_email(to_email, subject, body):
-    load_email_config()
-    if SENDER_EMAIL == "":
-        return
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_APP_PASSWORD)
-        full_message = "Subject: " + subject + "\n\n" + body
-        server.sendmail(SENDER_EMAIL, to_email, full_message)
-        server.quit()
-    except:
-        pass
+    ReminderService.send_email(to_email, subject, body)
 
 
 def choose_category():
@@ -525,14 +537,12 @@ def check_upcoming():
     upcoming = []
     for event in events:
         event_date = event[2]
-        event_time = event[3]
+        event_time = format_time(event[3])
         status = event[4]
 
         if status == "done":
             continue
-        # Skip events scheduled for today whose time has already passed (All Day events remain active all day)
-        formatted_event_time = format_time(event_time)
-        if event_date == today and formatted_event_time != "ALL DAY" and formatted_event_time < current_time:
+        if event_date == today and event_time != "ALL DAY" and event_time < current_time:
             continue
         upcoming.append(event)
 
@@ -548,21 +558,15 @@ def check_upcoming():
         title = event[1]
         event_date = event[2]
         event_time = format_time(event[3])
-        if event_date == today:
-            when = "TODAY"
-        else:
-            when = "TOMORROW"
+        when = "TODAY" if event_date == today else "TOMORROW"
         print(f"   • {title} ({when} at {event_time})")
 
-        # Send desktop notification (Linux)
         message = f"{title} is happening {when} at {event_time}"
-        if sys.platform != "win32":
-            os.system(f'notify-send "TaskFlow Reminder" "{message}"')
+        ReminderService.notify_desktop("TaskFlow Reminder", message)
 
-        # Email attendees silently
         attendee_emails = db.get_attendee_emails(event_id)
         for one_email in attendee_emails:
-            send_email(
+            ReminderService.send_email(
                 one_email,
                 f"Reminder: {title}",
                 f"Hi, this is a friendly reminder that '{title}' is happening {when} at {event_time}. Please remind your friend!"
@@ -571,39 +575,7 @@ def check_upcoming():
 
 
 def send_reminders():
-    today = str(date.today())
-    tomorrow = str(date.today() + timedelta(days=1))
-    current_time = datetime.now().strftime("%H:%M")
-    events = db.get_events_on_dates(today, tomorrow)
-    for event in events:
-        event_id = event[0]
-        title = event[1]
-        event_date = event[2]
-        event_time = format_time(event[3])
-        status = event[4]
-
-        if status == "done":
-            continue
-        # Skip events scheduled for today whose time has already passed (All Day events remain active all day)
-        if event_date == today and event_time != "ALL DAY" and event_time < current_time:
-            continue
-
-        if event_date == today:
-            when = "TODAY"
-        else:
-            when = "TOMORROW"
-        message = title + " is happening " + when + " at " + event_time
-        if sys.platform != "win32":
-            os.system('notify-send "TaskFlow Reminder" "' + message + '"')
-        attendee_emails = db.get_attendee_emails(event_id)
-        for one_email in attendee_emails:
-            send_email(
-                one_email,
-                "Reminder: " + title,
-                "Hi, this is a friendly reminder that '" + title +
-                "' is happening " + when + " at " + event_time +
-                ". Please remind your friend!"
-            )
+    check_upcoming()
 
 
 def pick_role():
