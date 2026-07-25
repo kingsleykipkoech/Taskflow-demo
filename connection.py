@@ -170,6 +170,31 @@ def get_attendee_emails(event_id): #Return a list of email addresses for an even
 
 
 
+def get_events_by_owner(owner_name):
+    pattern = "%" + owner_name.lower() + "%"
+    cursor.execute(
+        "SELECT e.id, e.title, e.event_date, e.event_time, e.details, e.status, c.name, e.created_by "
+        "FROM events e "
+        "LEFT JOIN categories c ON e.category_id = c.id "
+        "WHERE LOWER(e.created_by) LIKE %s "
+        "ORDER BY e.event_date, e.event_time",
+        (pattern,)
+    )
+    return cursor.fetchall()
+
+
+def get_busy_days_by_owner(year_month_prefix, owner_name):
+    pattern = "%" + owner_name.lower() + "%"
+    cursor.execute(
+        "SELECT event_date FROM events WHERE event_date LIKE %s AND LOWER(created_by) LIKE %s",
+        (year_month_prefix + "-%", pattern)
+    )
+    day_numbers = []
+    for row in cursor.fetchall():
+        day_numbers.append(int(row[0][8:10]))
+    return day_numbers
+
+
 def get_busy_days(year_month_prefix):
     """Return a list of day numbers that have events in a given month.
     year_month_prefix should be like '2026-07'."""

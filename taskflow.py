@@ -204,7 +204,7 @@ def show_event_list():
 
     today = str(date.today())
     print("  -------------------------------------------------------------------------")
-    print("  ID | Title | Date | Time | Category | Status | By")
+    print("  ID | Title | Date | Time | Category | Status | Owner")
     print("  -------------------------------------------------------------------------")
     for event in all_events:
         event_id = event[0]
@@ -217,7 +217,7 @@ def show_event_list():
         created_by = event[7] if len(event) > 7 and event[7] else "Planner"
 
         current_status = get_event_status(saved_status, event_date, today).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | By: {created_by}")
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | Owner: {created_by}")
         if details:
             print(f"      details: {details}")
     print("  -------------------------------------------------------------------------")
@@ -259,6 +259,67 @@ def view_all():
     print("")
 
 
+def view_member_calendar():
+    print("")
+    member_name = input("  Enter member/owner name (e.g. Kingsley, Felix): ").strip()
+    if member_name == "":
+        view_all()
+        return
+
+    member_events = db.get_events_by_owner(member_name)
+    if len(member_events) == 0:
+        print(f"  No events found for owner '{member_name}'.")
+        return
+
+    today = date.today()
+    year_month = "%04d-%02d" % (today.year, today.month)
+    busy_days = db.get_busy_days_by_owner(year_month, member_name)
+
+    month_title = f"{calendar.month_name[today.month]} {today.year} - {member_name.capitalize()}'s Calendar"
+    print(f"\n  === {month_title} ===")
+    print("  Mo  Tu  We  Th  Fr  Sa  Su")
+    print("  --------------------------")
+
+    for week in calendar.monthcalendar(today.year, today.month):
+        line = "  "
+        for day in week:
+            if day == 0:
+                cell = "    "
+            elif day == today.day:
+                cell = f"[{day}] " if day < 10 else f"[{day}]"
+            elif day in busy_days:
+                cell = f"{day}*  " if day < 10 else f"{day}* "
+            else:
+                cell = f"{day}   " if day < 10 else f"{day}  "
+            line += cell
+        print(line)
+
+    print("  --------------------------")
+    print(f"  (* = has events)  [{today.day}] = today")
+    print("")
+
+    today_str = str(date.today())
+    print("  -------------------------------------------------------------------------")
+    print("  ID | Title | Date | Time | Category | Status | Owner")
+    print("  -------------------------------------------------------------------------")
+    for event in member_events:
+        event_id = event[0]
+        title = event[1]
+        event_date = event[2]
+        event_time = format_time(event[3])
+        details = event[4]
+        saved_status = event[5]
+        category_name = event[6]
+        created_by = event[7] if len(event) > 7 and event[7] else "Planner"
+
+        current_status = get_event_status(saved_status, event_date, today_str).upper()
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | Owner: {created_by}")
+        if details:
+            print(f"      details: {details}")
+    print("  -------------------------------------------------------------------------")
+    print("")
+
+
 def search_events():
     print("")
     keyword = input("  Search keyword: ").strip().lower()
@@ -279,7 +340,7 @@ def search_events():
         category_name = event[6]
         created_by = event[7] if len(event) > 7 and event[7] else "Planner"
         current_status = get_event_status(event[5], event_date, today).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | By: {created_by}")
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | Owner: {created_by}")
     print("  -------------------------------------------------------------------------")
     print("")
 
@@ -536,12 +597,13 @@ def planner_menu():
         print("  |                                         |")
         print("  |  1) Add event                           |")
         print("  |  2) View all events and calendar        |")
-        print("  |  3) Search events                       |")
-        print("  |  4) Edit event                          |")
-        print("  |  5) Delete event                        |")
-        print("  |  6) Import events from .ics file        |")
-        print("  |  7) Manage categories                   |")
-        print("  |  8) Configure email reminders           |")
+        print("  |  3) View calendar by member/owner       |")
+        print("  |  4) Search events                       |")
+        print("  |  5) Edit event                          |")
+        print("  |  6) Delete event                        |")
+        print("  |  7) Import events from .ics file        |")
+        print("  |  8) Manage categories                   |")
+        print("  |  9) Configure email reminders           |")
         print("  |  0) Exit                                |")
         print("  |                                         |")
         print("  +-----------------------------------------+")
@@ -552,16 +614,18 @@ def planner_menu():
         elif choice == "2":
             view_all()
         elif choice == "3":
-            search_events()
+            view_member_calendar()
         elif choice == "4":
-            edit_event()
+            search_events()
         elif choice == "5":
-            delete_event()
+            edit_event()
         elif choice == "6":
-            import_ics()
+            delete_event()
         elif choice == "7":
-            manage_categories()
+            import_ics()
         elif choice == "8":
+            manage_categories()
+        elif choice == "9":
             configure_email()
         elif choice == "0":
             print("  Goodbye!")
@@ -578,7 +642,8 @@ def viewer_menu():
         print("  +-----------------------------------------+")
         print("  |                                         |")
         print("  |  1) View all events and calendar        |")
-        print("  |  2) Search events                       |")
+        print("  |  2) View calendar by member/owner       |")
+        print("  |  3) Search events                       |")
         print("  |  0) Exit                                |")
         print("  |                                         |")
         print("  +-----------------------------------------+")
@@ -587,6 +652,8 @@ def viewer_menu():
         if choice == "1":
             view_all()
         elif choice == "2":
+            view_member_calendar()
+        elif choice == "3":
             search_events()
         elif choice == "0":
             print("  Goodbye!")
