@@ -108,6 +108,11 @@ def check_upcoming():
         event_date = event[2]
         event_time = format_time(event[3])
         status = event[4]
+        owner_name = event[7] if len(event) > 7 and event[7] else "Planner"
+
+        # Only notify the logged-in user about their own events during interactive login
+        if "--check" not in sys.argv and CURRENT_USER and owner_name.lower() != CURRENT_USER.lower():
+            continue
 
         if status == "done":
             continue
