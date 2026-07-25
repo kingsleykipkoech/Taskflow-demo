@@ -258,26 +258,30 @@ def show_calendar():
     busy_days = db.get_busy_days(year_month)
 
     month_title = f"{calendar.month_name[today.month]} {today.year}"
-    print(f"\n  === {month_title} ===")
-    print("  Mo  Tu  We  Th  Fr  Sa  Su")
-    print("  --------------------------")
+    print("  +-----------------------------------+")
+    print(f"  |  {month_title.center(31)}  |")
+    print("  +-----------------------------------+")
+    print("  |   Mo  Tu  We  Th  Fr  Sa  Su      |")
+    print("  |  -------------------------------  |")
 
     for week in calendar.monthcalendar(today.year, today.month):
-        line = "  "
+        line = "  |  "
         for day in week:
             if day == 0:
                 cell = "    "
             elif day == today.day:
-                cell = f"[{day}] " if day < 10 else f"[{day}]"
+                cell = f" [{day}]" if day < 10 else f"[{day}]"
             elif day in busy_days:
-                cell = f"{day}*  " if day < 10 else f"{day}* "
+                cell = f"  {day}*" if day < 10 else f" {day}*"
             else:
-                cell = f"{day}   " if day < 10 else f"{day}  "
+                cell = f"   {day}" if day < 10 else f"  {day}"
             line += cell
+        line = line.ljust(37) + "|"
         print(line)
 
-    print("  --------------------------")
-    print(f"  (* = has events)  [{today.day}] = today")
+    print("  +-----------------------------------+")
+    print(f"  |  (* = has events)  [{today.day}] = today".ljust(37) + "|")
+    print("  +-----------------------------------+")
 
 
 def view_all():
@@ -324,27 +328,31 @@ def view_member_calendar():
     year_month = "%04d-%02d" % (today.year, today.month)
     busy_days = db.get_busy_days_by_owner(year_month, member_name)
 
-    month_title = f"{calendar.month_name[today.month]} {today.year} - {member_name.capitalize()}'s Calendar"
-    print(f"\n  === {month_title} ===")
-    print("  Mo  Tu  We  Th  Fr  Sa  Su")
-    print("  --------------------------")
+    month_title = f"{calendar.month_name[today.month]} {today.year} - {member_name.capitalize()}"
+    print("  +-----------------------------------+")
+    print(f"  |  {month_title.center(31)}  |")
+    print("  +-----------------------------------+")
+    print("  |   Mo  Tu  We  Th  Fr  Sa  Su      |")
+    print("  |  -------------------------------  |")
 
     for week in calendar.monthcalendar(today.year, today.month):
-        line = "  "
+        line = "  |  "
         for day in week:
             if day == 0:
                 cell = "    "
             elif day == today.day:
-                cell = f"[{day}] " if day < 10 else f"[{day}]"
+                cell = f" [{day}]" if day < 10 else f"[{day}]"
             elif day in busy_days:
-                cell = f"{day}*  " if day < 10 else f"{day}* "
+                cell = f"  {day}*" if day < 10 else f" {day}*"
             else:
-                cell = f"{day}   " if day < 10 else f"{day}  "
+                cell = f"   {day}" if day < 10 else f"  {day}"
             line += cell
+        line = line.ljust(37) + "|"
         print(line)
 
-    print("  --------------------------")
-    print(f"  (* = has events)  [{today.day}] = today")
+    print("  +-----------------------------------+")
+    print(f"  |  (* = has events)  [{today.day}] = today".ljust(37) + "|")
+    print("  +-----------------------------------+")
     print("")
 
     today_str = str(date.today())
