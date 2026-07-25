@@ -8,7 +8,7 @@ import connection as db
 
 
 # ==============================================================================
-# MODULE 1: REMINDERS & EMAIL NOTIFICATIONS (KINGSLEY)
+# MODULE 1: REMINDERS & EMAIL NOTIFICATIONS (Felix)
 # ==============================================================================
 
 SENDER_EMAIL        = ""
@@ -148,7 +148,7 @@ def send_reminders():
 
 
 # ==============================================================================
-# MODULE 2: USER IDENTITY & ROLE AUTHENTICATION (FELIX)
+# MODULE 2: USER IDENTITY & ROLE AUTHENTICATION (Lilian)
 # ==============================================================================
 
 CURRENT_USER = "Planner"
@@ -303,7 +303,7 @@ def manage_categories():
 
 
 # ==============================================================================
-# MODULE 4: DATA VALIDATION & STATUS ENGINE (RITA)
+# MODULE 4: DATA VALIDATION & STATUS ENGINE (Gabriel)
 # ==============================================================================
 
 def is_valid_date(text):
@@ -363,7 +363,7 @@ def get_event_status(saved_status, event_date, today):
 
 
 # ==============================================================================
-# MODULE 5: CALENDAR DISPLAY & TABLE RENDERER (GABRIEL)
+# MODULE 5: CALENDAR DISPLAY & TABLE RENDERER (Rita)
 # ==============================================================================
 
 def show_event_list():
@@ -491,7 +491,7 @@ def view_member_calendar():
 
 
 # ==============================================================================
-# MODULE 6: SEARCH, EDIT, DELETE & ICS IMPORTS (LILIAN)
+# MODULE 6: SEARCH, EDIT, DELETE & ICS IMPORTS (Kingsley)
 # ==============================================================================
 
 def search_events():
@@ -627,7 +627,7 @@ def import_ics():
 
 
 # ==============================================================================
-# CLI MENUS & APPLICATION ENTRY POINT
+# CLI MENUS & APPLICATION ENTRY POINT (Felix)
 # ==============================================================================
 
 def planner_menu():
