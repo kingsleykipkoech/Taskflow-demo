@@ -1,18 +1,25 @@
 import os
+import sys
 import mysql.connector
 DB_HOST     = "mysql-321c1333-alustudent-a6c3.c.aivencloud.com"
 DB_PORT     = 21755
 DB_USER     = "avnadmin"
 DB_PASSWORD = "AVNS_bI1GHgU3lywk6XbCIWa"
 DB_NAME     = "defaultdb"
-connection = mysql.connector.connect(
-    host=DB_HOST,
-    port=DB_PORT,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_NAME
-)
-cursor = connection.cursor(buffered=True)
+try:
+    connection = mysql.connector.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        connection_timeout=5
+    )
+    cursor = connection.cursor(buffered=True)
+except Exception as e:
+    print("\n  [Database Error] Could not connect to the cloud database.")
+    print("  Please check your internet connection and try again.\n")
+    sys.exit(1)
 
 def setup():                  #Read schema.sql and create the tables if they don't exist.
     folder = os.path.dirname(os.path.abspath(__file__))
