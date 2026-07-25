@@ -66,12 +66,21 @@ def add_category(name):
 # Event operations 
 
 def add_event(title, event_date, event_time, details, category_id): #Create a new event. Returns the new event's id.
-    cursor.execute(
-        "INSERT INTO events (title, event_date, event_time, details, status, category_id) "
-        "VALUES (%s, %s, %s, %s, 'pending', %s)",
-        (title, event_date, event_time, details, category_id)
-    )
-    connection.commit()
+    try:
+        cursor.execute(
+            "INSERT INTO events (title, event_date, event_time, details, status, category_id) "
+            "VALUES (%s, %s, %s, %s, 'pending', %s)",
+            (title, event_date, event_time, details, category_id)
+        )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        cursor.execute(
+            "INSERT INTO events (title, event_date, event_time, details, status, category_id) "
+            "VALUES (%s, %s, %s, %s, 'pending', %s)",
+            (title, event_date, event_time, details, category_id)
+        )
+        connection.commit()
     return cursor.lastrowid
 
 
