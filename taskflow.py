@@ -60,7 +60,48 @@ def get_event_status(saved_status, event_date, today):
     return "pending"
 
 
+def load_email_config():
+    global SENDER_EMAIL, SENDER_APP_PASSWORD
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".email_config")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path) as f:
+                lines = f.readlines()
+                if len(lines) >= 2:
+                    SENDER_EMAIL = lines[0].strip()
+                    SENDER_APP_PASSWORD = lines[1].strip()
+        except:
+            pass
+
+
+def configure_email():
+    print("")
+    print("  +-----------------------------------------+")
+    print("  |       Configure Email Reminders         |")
+    print("  +-----------------------------------------+")
+    print("")
+    email_input = input("  Enter your Gmail address (or Enter to disable): ").strip()
+    if email_input == "":
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".email_config")
+        if os.path.exists(config_path):
+            os.remove(config_path)
+        global SENDER_EMAIL, SENDER_APP_PASSWORD
+        SENDER_EMAIL = ""
+        SENDER_APP_PASSWORD = ""
+        print("  Email reminders disabled.")
+        return
+
+    password_input = input("  Enter your 16-character App Password: ").strip()
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".email_config")
+    with open(config_path, "w") as f:
+        f.write(email_input + "\n" + password_input + "\n")
+
+    load_email_config()
+    print("  Email reminders configured successfully!")
+
+
 def send_email(to_email, subject, body):
+    load_email_config()
     if SENDER_EMAIL == "":
         return
     try:
@@ -439,6 +480,7 @@ def planner_menu():
         print("  |  5) Delete event                        |")
         print("  |  6) Import events from .ics file        |")
         print("  |  7) Manage categories                   |")
+        print("  |  8) Configure email reminders           |")
         print("  |  0) Exit                                |")
         print("  |                                         |")
         print("  +-----------------------------------------+")
@@ -458,6 +500,8 @@ def planner_menu():
             import_ics()
         elif choice == "7":
             manage_categories()
+        elif choice == "8":
+            configure_email()
         elif choice == "0":
             print("  Goodbye!")
             break
