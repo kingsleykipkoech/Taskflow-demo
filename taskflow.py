@@ -3,7 +3,7 @@ import os
 import calendar
 import smtplib
 import urllib.request
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import connection as db
 
 # To email reminders, put a Gmail address and its 16-character App Password here.
@@ -404,11 +404,20 @@ def manage_categories():
 def check_upcoming():
     today = str(date.today())
     tomorrow = str(date.today() + timedelta(days=1))
+    current_time = datetime.now().strftime("%H:%M")
     events = db.get_events_on_dates(today, tomorrow)
     upcoming = []
     for event in events:
-        if event[4] != "done":
-            upcoming.append(event)
+        event_date = event[2]
+        event_time = event[3]
+        status = event[4]
+
+        if status == "done":
+            continue
+        # Skip events scheduled for today whose time has already passed
+        if event_date == today and event_time < current_time:
+            continue
+        upcoming.append(event)
 
     if len(upcoming) == 0:
         return
@@ -448,14 +457,21 @@ def check_upcoming():
 def send_reminders():
     today = str(date.today())
     tomorrow = str(date.today() + timedelta(days=1))
+    current_time = datetime.now().strftime("%H:%M")
     events = db.get_events_on_dates(today, tomorrow)
     for event in events:
-        if event[4] == "done":
-            continue
         event_id = event[0]
         title = event[1]
         event_date = event[2]
         event_time = event[3]
+        status = event[4]
+
+        if status == "done":
+            continue
+        # Skip events scheduled for today whose time has already passed
+        if event_date == today and event_time < current_time:
+            continue
+
         if event_date == today:
             when = "TODAY"
         else:
