@@ -181,8 +181,11 @@ def add_event():
     time_input = format_time(time_input)
     details = input("  Details (optional): ").strip()
     category_id = choose_category()
+    creator = input("  Creator / Your name (optional): ").strip()
+    if creator == "":
+        creator = "Planner"
 
-    new_event_id = db.add_event(title, date_input, time_input, details, category_id)
+    new_event_id = db.add_event(title, date_input, time_input, details, category_id, creator)
     print("")
     print("  Event added successfully!")
     print("")
@@ -201,7 +204,7 @@ def show_event_list():
 
     today = str(date.today())
     print("  -------------------------------------------------------------------------")
-    print("  ID | Title | Date | Time | Category | Status")
+    print("  ID | Title | Date | Time | Category | Status | By")
     print("  -------------------------------------------------------------------------")
     for event in all_events:
         event_id = event[0]
@@ -211,9 +214,10 @@ def show_event_list():
         details = event[4]
         saved_status = event[5]
         category_name = event[6]
+        created_by = event[7] if len(event) > 7 and event[7] else "Planner"
 
         current_status = get_event_status(saved_status, event_date, today).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status}")
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | By: {created_by}")
         if details:
             print(f"      details: {details}")
     print("  -------------------------------------------------------------------------")
@@ -273,8 +277,9 @@ def search_events():
         event_date = event[2]
         event_time = format_time(event[3])
         category_name = event[6]
+        created_by = event[7] if len(event) > 7 and event[7] else "Planner"
         current_status = get_event_status(event[5], event_date, today).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status}")
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | By: {created_by}")
     print("  -------------------------------------------------------------------------")
     print("")
 

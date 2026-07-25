@@ -35,6 +35,10 @@ def setup():                  #Read schema.sql and create the tables if they don
         cursor.execute("ALTER TABLE events MODIFY COLUMN event_time VARCHAR(20)")
     except:
         pass
+    try:
+        cursor.execute("ALTER TABLE events ADD COLUMN created_by VARCHAR(50) DEFAULT 'Planner'")
+    except:
+        pass
     connection.commit()
     cursor.execute("SELECT COUNT(*) FROM categories")
     count = cursor.fetchone()[0]
@@ -72,20 +76,20 @@ def add_category(name):
 
 # Event operations 
 
-def add_event(title, event_date, event_time, details, category_id): #Create a new event. Returns the new event's id.
+def add_event(title, event_date, event_time, details, category_id, created_by="Planner"): #Create a new event. Returns the new event's id.
     try:
         cursor.execute(
-            "INSERT INTO events (title, event_date, event_time, details, status, category_id) "
-            "VALUES (%s, %s, %s, %s, 'pending', %s)",
-            (title, event_date, event_time, details, category_id)
+            "INSERT INTO events (title, event_date, event_time, details, status, category_id, created_by) "
+            "VALUES (%s, %s, %s, %s, 'pending', %s, %s)",
+            (title, event_date, event_time, details, category_id, created_by)
         )
         connection.commit()
     except Exception:
         connection.rollback()
         cursor.execute(
-            "INSERT INTO events (title, event_date, event_time, details, status, category_id) "
-            "VALUES (%s, %s, %s, %s, 'pending', %s)",
-            (title, event_date, event_time, details, category_id)
+            "INSERT INTO events (title, event_date, event_time, details, status, category_id, created_by) "
+            "VALUES (%s, %s, %s, %s, 'pending', %s, %s)",
+            (title, event_date, event_time, details, category_id, created_by)
         )
         connection.commit()
     return cursor.lastrowid
@@ -94,7 +98,7 @@ def add_event(title, event_date, event_time, details, category_id): #Create a ne
 def get_all_events():
     """Return all events joined with their category name."""
     cursor.execute(
-        "SELECT e.id, e.title, e.event_date, e.event_time, e.details, e.status, c.name "
+        "SELECT e.id, e.title, e.event_date, e.event_time, e.details, e.status, c.name, e.created_by "
         "FROM events e "
         "LEFT JOIN categories c ON e.category_id = c.id "
         "ORDER BY e.event_date, e.event_time"
@@ -106,7 +110,7 @@ def search_events(keyword):
     """Search events by title or details using a keyword."""
     pattern = "%" + keyword + "%"
     cursor.execute(
-        "SELECT e.id, e.title, e.event_date, e.event_time, e.details, e.status, c.name "
+        "SELECT e.id, e.title, e.event_date, e.event_time, e.details, e.status, c.name, e.created_by "
         "FROM events e "
         "LEFT JOIN categories c ON e.category_id = c.id "
         "WHERE LOWER(e.title) LIKE %s OR LOWER(e.details) LIKE %s "

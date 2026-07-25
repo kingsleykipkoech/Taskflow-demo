@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS events (
     event_time VARCHAR(20),
     details VARCHAR(500),
     status VARCHAR(20),
-    category_id INT
+    category_id INT,
+    created_by VARCHAR(50)
 );
 
 -- Attendees table: stores emails of people who should be reminded.
