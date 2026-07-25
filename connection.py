@@ -11,17 +11,18 @@ DB_NAME     = "defaultdb"
 
 def get_connection():
     try:
-        return mysql.connector.connect(
+        connection = mysql.connector.connect(
             host=DB_HOST,
             port=DB_PORT,
             user=DB_USER,
             password=DB_PASSWORD,
             database=DB_NAME,
+            ssl_disabled=False,
             connection_timeout=5
         )
-    except Exception:
-        print("\n  [Database Error] Could not connect to the cloud database.")
-        print("  Please check your internet connection and try again.\n")
+        return connection
+    except mysql.connector.Error as e:
+        print(f"error: {e}")
         sys.exit(1)
 
 
