@@ -266,6 +266,8 @@ def show_calendar():
         for day in week:
             if day == 0:
                 cell = "    "
+            elif day == today.day:
+                cell = f" [{day}]" if day < 10 else f"[{day}]"
             else:
                 cell = f"   {day}" if day < 10 else f"  {day}"
             line += cell
@@ -328,6 +330,8 @@ def view_member_calendar():
         for day in week:
             if day == 0:
                 cell = "    "
+            elif day == today.day:
+                cell = f" [{day}]" if day < 10 else f"[{day}]"
             else:
                 cell = f"   {day}" if day < 10 else f"  {day}"
             line += cell
