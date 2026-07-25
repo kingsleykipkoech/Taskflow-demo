@@ -15,7 +15,7 @@ CURRENT_USER        = "Planner"
 
 class Event:
     """Represents an Event object in TaskFlow (OOP Data Model)."""
-    def __init__(self, event_id, title, event_date, event_time, details, status, category_name, owner="Planner"):
+    def __init__(self, event_id, title, event_date, event_time, details, status, category_name, owner_name="Planner"):
         self.id = event_id
         self.title = title
         self.event_date = event_date
@@ -23,14 +23,14 @@ class Event:
         self.details = details
         self.status = status
         self.category_name = category_name
-        self.owner = owner
+        self.owner_name = owner_name
 
     @classmethod
     def from_row(cls, row):
         if not row:
             return None
-        owner = row[7] if len(row) > 7 and row[7] else "Planner"
-        return cls(row[0], row[1], row[2], row[3], row[4], row[5], row[6], owner)
+        owner_name = row[7] if len(row) > 7 and row[7] else "Planner"
+        return cls(row[0], row[1], row[2], row[3], row[4], row[5], row[6], owner_name)
 
 
 def select_user_identity():
@@ -271,7 +271,7 @@ def show_event_list():
         ev = Event.from_row(row)
         formatted_time = format_time(ev.event_time)
         current_status = get_event_status(ev.status, ev.event_date, today).upper()
-        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner}")
+        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner_name}")
         if ev.details:
             print(f"      details: {ev.details}")
     print("  -------------------------------------------------------------------------")
@@ -374,7 +374,7 @@ def view_member_calendar():
         ev = Event.from_row(row)
         formatted_time = format_time(ev.event_time)
         current_status = get_event_status(ev.status, ev.event_date, today_str).upper()
-        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner}")
+        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner_name}")
         if ev.details:
             print(f"      details: {ev.details}")
     print("  -------------------------------------------------------------------------")
@@ -397,7 +397,7 @@ def search_events():
         ev = Event.from_row(row)
         formatted_time = format_time(ev.event_time)
         current_status = get_event_status(ev.status, ev.event_date, today).upper()
-        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner}")
+        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner_name}")
     print("  -------------------------------------------------------------------------")
     print("")
 
