@@ -158,9 +158,10 @@ def add_event():
     print("  |       Add New Event          |")
     print("  +-----------------------------+")
     print("")
-    title = input("  Event title: ").strip()
-    while title == "":
-        title = input("  Title cannot be empty. Event title: ").strip()
+    title = input("  Event title (or Enter to cancel): ").strip()
+    if title == "" or title.lower() == "cancel":
+        print("  Event creation cancelled.")
+        return
     date_input = input("  Date (YYYY-MM-DD): ").strip()
     while not is_valid_date(date_input):
         date_input = input("  Invalid. Date (YYYY-MM-DD): ").strip()
