@@ -100,6 +100,22 @@ def configure_email():
     print("  Email reminders configured successfully!")
 
 
+def check_email_setup_on_startup():
+    load_email_config()
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".email_config")
+    if not os.path.exists(config_path):
+        print("")
+        print("  +-----------------------------------------+")
+        print("  |   First-Time Setup: Email Reminders    |")
+        print("  +-----------------------------------------+")
+        answer = input("  Would you like to set up email reminders now? (y/n): ").strip().lower()
+        if answer == "y" or answer == "yes":
+            configure_email()
+        else:
+            with open(config_path, "w") as f:
+                f.write("\n\n")
+
+
 def send_email(to_email, subject, body):
     load_email_config()
     if SENDER_EMAIL == "":
@@ -539,6 +555,7 @@ if __name__ == "__main__":
     if "--check" in sys.argv:
         send_reminders()
     else:
+        check_email_setup_on_startup()
         role = pick_role()
         check_upcoming()
         if role == "planner":
