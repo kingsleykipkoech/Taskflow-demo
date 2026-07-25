@@ -261,10 +261,30 @@ def view_all():
 
 def view_member_calendar():
     print("")
-    member_name = input("  Enter member/owner name (e.g. Kingsley, Felix): ").strip()
-    if member_name == "":
+    owners = db.get_all_owners()
+    if len(owners) == 0:
+        print("  No members have added events yet.")
+        return
+
+    print("  -----------------------------")
+    print("  Members with Calendars:")
+    print("  -----------------------------")
+    number = 1
+    for owner_name in owners:
+        print(f"   {number}) {owner_name}")
+        number += 1
+    print("  -----------------------------")
+    print("")
+
+    choice = input("  Pick a member number (or Enter for all): ").strip()
+    if choice == "":
         view_all()
         return
+
+    if choice.isdigit() and 1 <= int(choice) <= len(owners):
+        member_name = owners[int(choice) - 1]
+    else:
+        member_name = choice
 
     member_events = db.get_events_by_owner(member_name)
     if len(member_events) == 0:

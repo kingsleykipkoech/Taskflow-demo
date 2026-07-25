@@ -170,6 +170,14 @@ def get_attendee_emails(event_id): #Return a list of email addresses for an even
 
 
 
+def get_all_owners():
+    cursor.execute("SELECT DISTINCT created_by FROM events WHERE created_by IS NOT NULL AND created_by != '' ORDER BY created_by")
+    owners = []
+    for row in cursor.fetchall():
+        owners.append(row[0])
+    return owners
+
+
 def get_events_by_owner(owner_name):
     pattern = "%" + owner_name.lower() + "%"
     cursor.execute(
