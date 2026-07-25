@@ -146,15 +146,14 @@ def send_email(to_email, subject, body):
 def choose_category():
     all_categories = db.get_all_categories()
     print("")
-    print("  +-----------------------------+")
-    print("  |        Categories            |")
-    print("  +-----------------------------+")
+    print("  Categories:")
+    print("  -----------------------------")
     number = 1
     for category in all_categories:
         category_name = category[1]
-        print("  |  " + str(number) + ") " + category_name.ljust(23) + "|")
+        print(f"   {number}) {category_name}")
         number = number + 1
-    print("  +-----------------------------+")
+    print("  -----------------------------")
     print("")
     choice = input("  Pick a category number: ").strip()
     while not choice.isdigit() or int(choice) < 1 or int(choice) > len(all_categories):
@@ -176,9 +175,9 @@ def add_event():
     date_input = input("  Date (YYYY-MM-DD): ").strip()
     while not is_valid_date(date_input):
         date_input = input("  Invalid. Date (YYYY-MM-DD): ").strip()
-    time_input = input("  Time (HH:MM or 'all' for All Day): ").strip()
+    time_input = input("  Time (HH:MM or leave empty for All Day): ").strip()
     while not is_valid_time(time_input):
-        time_input = input("  Invalid. Time (HH:MM or 'all' for All Day): ").strip()
+        time_input = input("  Invalid. Time (HH:MM or you can leave empty for All Day): ").strip()
     time_input = format_time(time_input)
     details = input("  Details (optional): ").strip()
     category_id = choose_category()
@@ -187,11 +186,11 @@ def add_event():
     print("")
     print("  Event added successfully!")
     print("")
-    emails_input = input("  Add participant emails (space separated), or Enter to skip: ").strip()
+    emails_input = input("  Add a person/people to remind you: ").strip()
     if emails_input != "":
         for one_email in emails_input.split():
             db.add_attendee(new_event_id, one_email)
-        print("  Participants added.")
+        print("  Emails added.")
 
 
 def show_event_list():
@@ -201,20 +200,23 @@ def show_event_list():
         return
 
     today = str(date.today())
-    print("  +-----+----------------------+------------+-------+----------------+---------+")
-    print("  | ID  | Title                | Date       | Time  | Category       | Status  |")
-    print("  +-----+----------------------+------------+-------+----------------+---------+")
+    print("  -------------------------------------------------------------------------")
+    print("  ID | Title | Date | Time | Category | Status")
+    print("  -------------------------------------------------------------------------")
     for event in all_events:
-        event_id = str(event[0]).ljust(3)
-        title = str(event[1])[:20].ljust(20)
-        event_date = str(event[2]).ljust(10)
-        event_time = str(event[3]).ljust(5)
-        category_name = str(event[6])[:14].ljust(14)
-        current_status = get_event_status(event[5], event[2], today).upper().ljust(7)
-        print("  | " + event_id + " | " + title + " | " + event_date + " | " + event_time + " | " + category_name + " | " + current_status + " |")
-        if event[4]:
-            print("  |     |   -> " + str(event[4])[:65].ljust(73) + " |")
-    print("  +-----+----------------------+------------+-------+----------------+---------+")
+        event_id = event[0]
+        title = event[1]
+        event_date = event[2]
+        event_time = format_time(event[3])
+        details = event[4]
+        saved_status = event[5]
+        category_name = event[6]
+
+        current_status = get_event_status(saved_status, event_date, today).upper()
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status}")
+        if details:
+            print(f"      details: {details}")
+    print("  -------------------------------------------------------------------------")
 
 
 def show_calendar():
@@ -222,35 +224,27 @@ def show_calendar():
     year_month = "%04d-%02d" % (today.year, today.month)
     busy_days = db.get_busy_days(year_month)
 
-    month_title = calendar.month_name[today.month] + " " + str(today.year)
-    print("  +------------------------------+")
-    print("  |  " + month_title.center(26) + "  |")
-    print("  +------------------------------+")
-
-    header = "  |  "
-    for day_name in ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]:
-        header = header + day_name.ljust(4)
-    header = header + "|"
-    print(header)
-    print("  |  " + "-" * 26 + "  |")
+    month_title = f"{calendar.month_name[today.month]} {today.year}"
+    print(f"\n  === {month_title} ===")
+    print("  Mo  Tu  We  Th  Fr  Sa  Su")
+    print("  --------------------------")
 
     for week in calendar.monthcalendar(today.year, today.month):
-        line = "  |  "
+        line = "  "
         for day in week:
             if day == 0:
                 cell = "    "
             elif day == today.day:
-                cell = ("[" + str(day) + "]").ljust(4)
+                cell = f"[{day}] " if day < 10 else f"[{day}]"
             elif day in busy_days:
-                cell = (str(day) + "*").ljust(4)
+                cell = f"{day}*  " if day < 10 else f"{day}* "
             else:
-                cell = str(day).ljust(4)
-            line = line + cell
-        line = line + "|"
+                cell = f"{day}   " if day < 10 else f"{day}  "
+            line += cell
         print(line)
 
-    print("  +------------------------------+")
-    print("  (* = has events)  [" + str(today.day) + "] = today")
+    print("  --------------------------")
+    print(f"  (* = has events)  [{today.day}] = today")
 
 
 def view_all():
@@ -272,16 +266,16 @@ def search_events():
     today = str(date.today())
     print("")
     print("  Search results:")
-    print("  " + "-" * 60)
+    print("  -------------------------------------------------------------------------")
     for event in results:
-        event_id = str(event[0])
+        event_id = event[0]
         title = event[1]
         event_date = event[2]
-        event_time = event[3]
+        event_time = format_time(event[3])
         category_name = event[6]
         current_status = get_event_status(event[5], event_date, today).upper()
-        print("  #" + event_id + "  " + title + "  |  " + event_date + " " + event_time + "  |  " + category_name + "  |  " + current_status)
-    print("  " + "-" * 60)
+        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status}")
+    print("  -------------------------------------------------------------------------")
     print("")
 
 
@@ -299,11 +293,11 @@ def edit_event():
         return
 
     print("")
-    print("  Editing: " + title)
-    print("  " + "-" * 35)
+    print(f"  Editing: {title}")
+    print("  -----------------------------------")
     print("  1) Mark as done")
     print("  2) Add participants (people to remind you)")
-    print("  " + "-" * 35)
+    print("  -----------------------------------")
     choice = input("  Pick 1 or 2: ").strip()
 
     if choice == "1":
@@ -316,7 +310,7 @@ def edit_event():
             return
         for one_email in emails_input.split():
             db.add_attendee(event_id, one_email)
-        print("  Participants added to: " + title)
+        print(f"  Participants added to: {title}")
     else:
         print("  Nothing changed.")
 
@@ -338,7 +332,7 @@ def delete_event():
 
 def import_ics():
     print("")
-    source = input("  Enter .ics filename OR web URL link (http/https): ").strip()
+    source = input("  Enter .ics absolute filename or web URL link: ").strip()
     if source == "":
         return
 
@@ -393,24 +387,23 @@ def import_ics():
             event_date = ""
             event_time = "00:00"
 
-    print("  Imported " + str(imported_count) + " event(s).")
+    print(f"  Imported {imported_count} event(s).")
 
 
 def manage_categories():
     print("")
     all_categories = db.get_all_categories()
-    print("  +-----------------------------+")
-    print("  |     Current Categories       |")
-    print("  +-----------------------------+")
+    print("  Current Categories:")
+    print("  -----------------------------")
     for category in all_categories:
-        print("  |  - " + category[1].ljust(23) + "|")
-    print("  +-----------------------------+")
+        print(f"   - {category[1]}")
+    print("  -----------------------------")
     print("")
     name = input("  Enter new category name (or Enter to go back): ").strip()
     if name == "":
         return
     db.add_category(name)
-    print("  Category '" + name + "' added!")
+    print(f"  Category '{name}' added!")
 
 
 def check_upcoming():
@@ -436,9 +429,9 @@ def check_upcoming():
         return
 
     print("")
-    print("  +-----------------------------------------+")
-    print("  |           Upcoming Reminders!            |")
-    print("  +-----------------------------------------+")
+    print("  -----------------------------------------")
+    print("             Upcoming Reminders!           ")
+    print("  -----------------------------------------")
     for event in upcoming:
         event_id = event[0]
         title = event[1]
@@ -448,23 +441,21 @@ def check_upcoming():
             when = "TODAY"
         else:
             when = "TOMORROW"
-        print("  |  " + (title + " - " + when + " at " + event_time).ljust(37) + "|")
+        print(f"   • {title} ({when} at {event_time})")
 
         # Send desktop notification
-        message = title + " is happening " + when + " at " + event_time
-        os.system('notify-send "TaskFlow Reminder" "' + message + '"')
+        message = f"{title} is happening {when} at {event_time}"
+        os.system(f'notify-send "TaskFlow Reminder" "{message}"')
 
         # Email attendees silently
         attendee_emails = db.get_attendee_emails(event_id)
         for one_email in attendee_emails:
             send_email(
                 one_email,
-                "Reminder: " + title,
-                "Hi, this is a friendly reminder that '" + title +
-                "' is happening " + when + " at " + event_time +
-                ". Please remind your friend!"
+                f"Reminder: {title}",
+                f"Hi, this is a friendly reminder that '{title}' is happening {when} at {event_time}. Please remind your friend!"
             )
-    print("  +-----------------------------------------+")
+    print("  -----------------------------------------")
 
 
 def send_reminders():
