@@ -22,3 +22,9 @@ CREATE TABLE IF NOT EXISTS attendees (
     event_id INT,
     email VARCHAR(200)
 );
+
+-- Members table: stores team member names
+CREATE TABLE IF NOT EXISTS members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE
+);

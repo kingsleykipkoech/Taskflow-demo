@@ -29,8 +29,14 @@ def setup():                  #Read schema.sql and create the tables if they don
     schema_file.close()
     for statement in full_sql.split(";"):
         cleaned = statement.strip()
-        if cleaned != "" and cleaned.startswith("CREATE"):
-            cursor.execute(cleaned)
+        lines = [l for l in cleaned.splitlines() if not l.strip().startswith("--")]
+        clean_stmt = "\n".join(lines).strip()
+        if clean_stmt != "" and clean_stmt.upper().startswith("CREATE"):
+            cursor.execute(clean_stmt)
+    try:
+        cursor.execute("CREATE TABLE IF NOT EXISTS members (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) UNIQUE)")
+    except:
+        pass
     try:
         cursor.execute("ALTER TABLE events MODIFY COLUMN event_time VARCHAR(20)")
     except:
@@ -50,6 +56,32 @@ def setup():                  #Read schema.sql and create the tables if they don
                 (category_name,)
             )
         connection.commit()
+
+    cursor.execute("SELECT COUNT(*) FROM members")
+    m_count = cursor.fetchone()[0]
+    if m_count == 0:
+        default_members = ["Kingsley", "Felix", "Vanessa", "Rita", "Gabriel"]
+        for member_name in default_members:
+            cursor.execute(
+                "INSERT INTO members (name) VALUES (%s)",
+                (member_name,)
+            )
+        connection.commit()
+
+
+# Member operations
+
+def get_all_members():
+    cursor.execute("SELECT id, name FROM members ORDER BY id")
+    return cursor.fetchall()
+
+
+def add_member(name):
+    try:
+        cursor.execute("INSERT INTO members (name) VALUES (%s)", (name,))
+        connection.commit()
+    except:
+        pass
 
 
 #  Category operations 

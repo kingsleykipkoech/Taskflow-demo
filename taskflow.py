@@ -10,6 +10,38 @@ import connection as db
 # Leave them empty and reminders will just show as desktop notifications.
 SENDER_EMAIL        = ""
 SENDER_APP_PASSWORD = ""
+CURRENT_USER        = "Planner"
+
+
+def select_user_identity():
+    global CURRENT_USER
+    all_members = db.get_all_members()
+    print("")
+    print("  +-----------------------------+")
+    print("  |      Who are you?           |")
+    print("  +-----------------------------+")
+    number = 1
+    for member in all_members:
+        print(f"   {number}) {member[1]}")
+        number += 1
+    print(f"   {number}) + Register New Member")
+    print("  -----------------------------")
+    print("")
+    choice = input("  Pick your name number: ").strip()
+    while not choice.isdigit() or int(choice) < 1 or int(choice) > len(all_members) + 1:
+        choice = input("  Invalid. Pick your name number: ").strip()
+
+    if int(choice) == len(all_members) + 1:
+        new_name = input("  Enter your name: ").strip()
+        if new_name != "":
+            db.add_member(new_name)
+            CURRENT_USER = new_name
+        else:
+            CURRENT_USER = "Planner"
+    else:
+        CURRENT_USER = all_members[int(choice) - 1][1]
+
+    print(f"\n  Logged in as: {CURRENT_USER}")
 
 
 def is_valid_date(text):
@@ -181,11 +213,8 @@ def add_event():
     time_input = format_time(time_input)
     details = input("  Details (optional): ").strip()
     category_id = choose_category()
-    creator = input("  Creator / Your name (optional): ").strip()
-    if creator == "":
-        creator = "Planner"
 
-    new_event_id = db.add_event(title, date_input, time_input, details, category_id, creator)
+    new_event_id = db.add_event(title, date_input, time_input, details, category_id, CURRENT_USER)
     print("")
     print("  Event added successfully!")
     print("")
@@ -689,6 +718,7 @@ if __name__ == "__main__":
     else:
         check_email_setup_on_startup()
         role = pick_role()
+        select_user_identity()
         check_upcoming()
         if role == "planner":
             planner_menu()
