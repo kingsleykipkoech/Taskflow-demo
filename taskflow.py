@@ -254,9 +254,6 @@ def show_event_list():
 
 def show_calendar():
     today = date.today()
-    year_month = "%04d-%02d" % (today.year, today.month)
-    busy_days = db.get_busy_days(year_month)
-
     month_title = f"{calendar.month_name[today.month]} {today.year}"
     print("  +-----------------------------------+")
     print(f"  |  {month_title.center(31)}  |")
@@ -269,18 +266,12 @@ def show_calendar():
         for day in week:
             if day == 0:
                 cell = "    "
-            elif day == today.day:
-                cell = f" [{day}]" if day < 10 else f"[{day}]"
-            elif day in busy_days:
-                cell = f"  {day}*" if day < 10 else f" {day}*"
             else:
                 cell = f"   {day}" if day < 10 else f"  {day}"
             line += cell
         line = line.ljust(37) + "|"
         print(line)
 
-    print("  +-----------------------------------+")
-    print(f"  |  (* = has events)  [{today.day}] = today".ljust(37) + "|")
     print("  +-----------------------------------+")
 
 
@@ -325,9 +316,6 @@ def view_member_calendar():
         return
 
     today = date.today()
-    year_month = "%04d-%02d" % (today.year, today.month)
-    busy_days = db.get_busy_days_by_owner(year_month, member_name)
-
     month_title = f"{calendar.month_name[today.month]} {today.year} - {member_name.capitalize()}"
     print("  +-----------------------------------+")
     print(f"  |  {month_title.center(31)}  |")
@@ -340,18 +328,12 @@ def view_member_calendar():
         for day in week:
             if day == 0:
                 cell = "    "
-            elif day == today.day:
-                cell = f" [{day}]" if day < 10 else f"[{day}]"
-            elif day in busy_days:
-                cell = f"  {day}*" if day < 10 else f" {day}*"
             else:
                 cell = f"   {day}" if day < 10 else f"  {day}"
             line += cell
         line = line.ljust(37) + "|"
         print(line)
 
-    print("  +-----------------------------------+")
-    print(f"  |  (* = has events)  [{today.day}] = today".ljust(37) + "|")
     print("  +-----------------------------------+")
     print("")
 
