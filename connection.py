@@ -24,6 +24,10 @@ def setup():                  #Read schema.sql and create the tables if they don
         cleaned = statement.strip()
         if cleaned != "" and cleaned.startswith("CREATE"):
             cursor.execute(cleaned)
+    try:
+        cursor.execute("ALTER TABLE events MODIFY COLUMN event_time VARCHAR(20)")
+    except:
+        pass
     connection.commit()
     cursor.execute("SELECT COUNT(*) FROM categories")
     count = cursor.fetchone()[0]

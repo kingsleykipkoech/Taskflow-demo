@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200),
     event_date VARCHAR(10),
-    event_time VARCHAR(5),
+    event_time VARCHAR(20),
     details VARCHAR(500),
     status VARCHAR(20),
     category_id INT
