@@ -443,9 +443,10 @@ def check_upcoming():
             when = "TOMORROW"
         print(f"   • {title} ({when} at {event_time})")
 
-        # Send desktop notification
+        # Send desktop notification (Linux)
         message = f"{title} is happening {when} at {event_time}"
-        os.system(f'notify-send "TaskFlow Reminder" "{message}"')
+        if sys.platform != "win32":
+            os.system(f'notify-send "TaskFlow Reminder" "{message}"')
 
         # Email attendees silently
         attendee_emails = db.get_attendee_emails(event_id)
@@ -481,7 +482,8 @@ def send_reminders():
         else:
             when = "TOMORROW"
         message = title + " is happening " + when + " at " + event_time
-        os.system('notify-send "TaskFlow Reminder" "' + message + '"')
+        if sys.platform != "win32":
+            os.system('notify-send "TaskFlow Reminder" "' + message + '"')
         attendee_emails = db.get_attendee_emails(event_id)
         for one_email in attendee_emails:
             send_email(
