@@ -34,15 +34,26 @@ def is_valid_date(text):
     return True
 
 
+def format_time(text):
+    cleaned = text.strip().lower()
+    if cleaned in ["all", "all day", "allday", "all-day", ""]:
+        return "ALL DAY"
+    parts = cleaned.split(":")
+    if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+        return "%02d:%02d" % (int(parts[0]), int(parts[1]))
+    return text
+
+
 def is_valid_time(text):
-    parts = text.split(":")
+    cleaned = text.strip().lower()
+    if cleaned in ["all", "all day", "allday", "all-day", ""]:
+        return True
+    parts = cleaned.split(":")
     if len(parts) != 2:
         return False
     hour_part = parts[0]
     minute_part = parts[1]
-    if not hour_part.isdigit():
-        return False
-    if not minute_part.isdigit():
+    if not hour_part.isdigit() or not minute_part.isdigit():
         return False
     if int(hour_part) < 0 or int(hour_part) > 23:
         return False
@@ -165,9 +176,10 @@ def add_event():
     date_input = input("  Date (YYYY-MM-DD): ").strip()
     while not is_valid_date(date_input):
         date_input = input("  Invalid. Date (YYYY-MM-DD): ").strip()
-    time_input = input("  Time (HH:MM): ").strip()
+    time_input = input("  Time (HH:MM or 'all' for All Day): ").strip()
     while not is_valid_time(time_input):
-        time_input = input("  Invalid. Time (HH:MM): ").strip()
+        time_input = input("  Invalid. Time (HH:MM or 'all' for All Day): ").strip()
+    time_input = format_time(time_input)
     details = input("  Details (optional): ").strip()
     category_id = choose_category()
 
@@ -414,8 +426,9 @@ def check_upcoming():
 
         if status == "done":
             continue
-        # Skip events scheduled for today whose time has already passed
-        if event_date == today and event_time < current_time:
+        # Skip events scheduled for today whose time has already passed (All Day events remain active all day)
+        formatted_event_time = format_time(event_time)
+        if event_date == today and formatted_event_time != "ALL DAY" and formatted_event_time < current_time:
             continue
         upcoming.append(event)
 
@@ -430,7 +443,7 @@ def check_upcoming():
         event_id = event[0]
         title = event[1]
         event_date = event[2]
-        event_time = event[3]
+        event_time = format_time(event[3])
         if event_date == today:
             when = "TODAY"
         else:
@@ -463,13 +476,13 @@ def send_reminders():
         event_id = event[0]
         title = event[1]
         event_date = event[2]
-        event_time = event[3]
+        event_time = format_time(event[3])
         status = event[4]
 
         if status == "done":
             continue
-        # Skip events scheduled for today whose time has already passed
-        if event_date == today and event_time < current_time:
+        # Skip events scheduled for today whose time has already passed (All Day events remain active all day)
+        if event_date == today and event_time != "ALL DAY" and event_time < current_time:
             continue
 
         if event_date == today:
