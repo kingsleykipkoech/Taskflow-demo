@@ -69,10 +69,10 @@ def configure_email():
         print("  Email reminders disabled.")
         return
 
-    password_input = input("  Enter your 16-character App Password: ").strip()
+    password_input = input("  Enter your App Password: ").strip()
     config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".email_config")
     with open(config_path, "w") as f:
-        f.write(email_input + "\n" + password_input + "\n")
+        f.write(f"{email_input}\n{password_input}\n")
 
     load_email_config()
     print("  Email reminders configured successfully!")
@@ -133,12 +133,13 @@ def check_upcoming():
         message = f"{title} is happening {when} at {event_time}"
         ReminderService.notify_desktop("TaskFlow Reminder", message)
 
+        owner_name = event[7] if len(event) > 7 and event[7] else "Planner"
         attendee_emails = db.get_attendee_emails(event_id)
         for one_email in attendee_emails:
             ReminderService.send_email(
                 one_email,
-                f"Reminder: {title}",
-                f"Hi, this is a friendly reminder that '{title}' is happening {when} at {event_time}. Please remind your friend!"
+                f"TaskFlow Reminder: {owner_name}'s Event '{title}'",
+                f"Hi there!\n\nThis is an automated reminder from TaskFlow.\n\nYour teammate {owner_name} has an upcoming event:\n📌 Event: {title}\n📅 When: {when}\n⏰ Time: {event_time}\n\nPlease reach out and remind {owner_name} so they don't forget!\n\nBest regards,\nTaskFlow Team"
             )
     print("  -----------------------------------------")
 
