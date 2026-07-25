@@ -233,12 +233,19 @@ class DatabaseManager:
         return day_numbers
 
 
+    def delete_member(self, name):
+        self.cursor.execute("DELETE FROM members WHERE name = %s", (name,))
+        self.db.commit()
+        return self.cursor.rowcount
+
+
 # Instance of DatabaseManager for import access
 db_instance = DatabaseManager()
 
 setup                 = db_instance.setup
 get_all_members       = db_instance.get_all_members
 add_member            = db_instance.add_member
+delete_member         = db_instance.delete_member
 get_all_categories    = db_instance.get_all_categories
 get_category_id       = db_instance.get_category_id
 add_category          = db_instance.add_category
