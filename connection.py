@@ -127,6 +127,21 @@ def add_event(title, event_date, event_time, details, category_id, created_by="P
     return cursor.lastrowid
 
 
+def get_user_events(owner_name):
+    if not owner_name or owner_name.lower() == "planner":
+        return get_all_events()
+    pattern = "%" + owner_name.lower() + "%"
+    cursor.execute(
+        "SELECT e.id, e.title, e.event_date, e.event_time, e.details, e.status, c.name, e.created_by "
+        "FROM events e "
+        "LEFT JOIN categories c ON e.category_id = c.id "
+        "WHERE LOWER(e.created_by) LIKE %s "
+        "ORDER BY e.event_date, e.event_time",
+        (pattern,)
+    )
+    return cursor.fetchall()
+
+
 def get_all_events():
     """Return all events joined with their category name."""
     cursor.execute(

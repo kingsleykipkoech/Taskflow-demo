@@ -226,9 +226,9 @@ def add_event():
 
 
 def show_event_list():
-    all_events = db.get_all_events()
+    all_events = db.get_user_events(CURRENT_USER)
     if len(all_events) == 0:
-        print("  No events yet.")
+        print(f"  No events yet for {CURRENT_USER}.")
         return
 
     today = str(date.today())
