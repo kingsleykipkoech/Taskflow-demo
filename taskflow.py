@@ -293,7 +293,7 @@ def view_member_calendar():
         return
 
     print("  -----------------------------")
-    print("  Members with Calendars:")
+    print("  Users with Calendars:")
     print("  -----------------------------")
     number = 1
     for owner_name in owners:
@@ -302,7 +302,7 @@ def view_member_calendar():
     print("  -----------------------------")
     print("")
 
-    choice = input("  Pick a member number (or Enter for all): ").strip()
+    choice = input("  Pick a user number (or Enter for all): ").strip()
     if choice == "":
         view_all()
         return
@@ -640,7 +640,7 @@ def planner_menu():
         print("  |                                         |")
         print("  |  1) Add event                           |")
         print("  |  2) View all events and calendar        |")
-        print("  |  3) View calendar by member/owner       |")
+        print("  |  3) View calendar by user               |")
         print("  |  4) Search events                       |")
         print("  |  5) Edit event                          |")
         print("  |  6) Delete event                        |")
@@ -685,7 +685,7 @@ def viewer_menu():
         print("  +-----------------------------------------+")
         print("  |                                         |")
         print("  |  1) View all events and calendar        |")
-        print("  |  2) View calendar by member/owner       |")
+        print("  |  2) View calendar by user               |")
         print("  |  3) Search events                       |")
         print("  |  0) Exit                                |")
         print("  |                                         |")
