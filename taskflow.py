@@ -108,11 +108,6 @@ def check_upcoming():
         event_date = event[2]
         event_time = format_time(event[3])
         status = event[4]
-        owner_name = event[7] if len(event) > 7 and event[7] else "Planner"
-
-        # Only notify the logged-in user about their own events during interactive login
-        if "--check" not in sys.argv and CURRENT_USER and owner_name.lower() != CURRENT_USER.lower():
-            continue
 
         if status == "done":
             continue
@@ -177,7 +172,7 @@ def select_user_identity():
         print("")
         choice = input("  Pick your name number: ").strip()
         while not choice.isdigit() or int(choice) < 1 or int(choice) > len(all_members) + 1:
-            choice = input("  Invalid. Pick your name number: ").strip()
+            choice = input("  Invalid selection. Pick your name number: ").strip()
 
         if int(choice) == len(all_members) + 1:
             print("")
@@ -259,7 +254,6 @@ def pick_role():
 # ==============================================================================
 
 class Event:
-    """Represents an Event object in TaskFlow (OOP Data Model)."""
     def __init__(self, event_id, title, event_date, event_time, details, status, category_name, owner_name="Planner"):
         self.id = event_id
         self.title = title
