@@ -104,7 +104,7 @@ def configure_email():
 def check_email_setup_on_startup():
     load_email_config()
     config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".email_config")
-    if not os.path.exists(config_path):
+    if SENDER_EMAIL == "" and not os.path.exists(config_path):
         print("")
         print("  +-----------------------------------------+")
         print("  |   First-Time Setup: Email Reminders    |")
@@ -114,7 +114,7 @@ def check_email_setup_on_startup():
             configure_email()
         else:
             with open(config_path, "w") as f:
-                f.write("\n\n")
+                f.write("disabled\n")
 
 
 def send_email(to_email, subject, body):
