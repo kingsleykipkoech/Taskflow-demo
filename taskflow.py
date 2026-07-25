@@ -13,6 +13,26 @@ SENDER_APP_PASSWORD = ""
 CURRENT_USER        = "Planner"
 
 
+class Event:
+    """Represents an Event object in TaskFlow (OOP Data Model)."""
+    def __init__(self, event_id, title, event_date, event_time, details, status, category_name, owner="Planner"):
+        self.id = event_id
+        self.title = title
+        self.event_date = event_date
+        self.event_time = event_time
+        self.details = details
+        self.status = status
+        self.category_name = category_name
+        self.owner = owner
+
+    @classmethod
+    def from_row(cls, row):
+        if not row:
+            return None
+        owner = row[7] if len(row) > 7 and row[7] else "Planner"
+        return cls(row[0], row[1], row[2], row[3], row[4], row[5], row[6], owner)
+
+
 def select_user_identity():
     global CURRENT_USER
     all_members = db.get_all_members()
@@ -226,8 +246,8 @@ def add_event():
 
 
 def show_event_list():
-    all_events = db.get_user_events(CURRENT_USER)
-    if len(all_events) == 0:
+    raw_events = db.get_user_events(CURRENT_USER)
+    if len(raw_events) == 0:
         print(f"  No events yet for {CURRENT_USER}.")
         return
 
@@ -235,20 +255,13 @@ def show_event_list():
     print("  -------------------------------------------------------------------------")
     print("  ID | Title | Date | Time | Category | Status | Owner")
     print("  -------------------------------------------------------------------------")
-    for event in all_events:
-        event_id = event[0]
-        title = event[1]
-        event_date = event[2]
-        event_time = format_time(event[3])
-        details = event[4]
-        saved_status = event[5]
-        category_name = event[6]
-        created_by = event[7] if len(event) > 7 and event[7] else "Planner"
-
-        current_status = get_event_status(saved_status, event_date, today).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | Owner: {created_by}")
-        if details:
-            print(f"      details: {details}")
+    for row in raw_events:
+        ev = Event.from_row(row)
+        formatted_time = format_time(ev.event_time)
+        current_status = get_event_status(ev.status, ev.event_date, today).upper()
+        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner}")
+        if ev.details:
+            print(f"      details: {ev.details}")
     print("  -------------------------------------------------------------------------")
 
 
@@ -312,8 +325,8 @@ def view_member_calendar():
     else:
         member_name = choice
 
-    member_events = db.get_events_by_owner(member_name)
-    if len(member_events) == 0:
+    raw_events = db.get_events_by_owner(member_name)
+    if len(raw_events) == 0:
         print(f"  No events found for owner '{member_name}'.")
         return
 
@@ -345,20 +358,13 @@ def view_member_calendar():
     print("  -------------------------------------------------------------------------")
     print("  ID | Title | Date | Time | Category | Status | Owner")
     print("  -------------------------------------------------------------------------")
-    for event in member_events:
-        event_id = event[0]
-        title = event[1]
-        event_date = event[2]
-        event_time = format_time(event[3])
-        details = event[4]
-        saved_status = event[5]
-        category_name = event[6]
-        created_by = event[7] if len(event) > 7 and event[7] else "Planner"
-
-        current_status = get_event_status(saved_status, event_date, today_str).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | Owner: {created_by}")
-        if details:
-            print(f"      details: {details}")
+    for row in raw_events:
+        ev = Event.from_row(row)
+        formatted_time = format_time(ev.event_time)
+        current_status = get_event_status(ev.status, ev.event_date, today_str).upper()
+        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner}")
+        if ev.details:
+            print(f"      details: {ev.details}")
     print("  -------------------------------------------------------------------------")
     print("")
 
@@ -366,8 +372,8 @@ def view_member_calendar():
 def search_events():
     print("")
     keyword = input("  Search keyword: ").strip().lower()
-    results = db.search_events(keyword)
-    if len(results) == 0:
+    raw_results = db.search_events(keyword)
+    if len(raw_results) == 0:
         print("  No matching events.")
         return
 
@@ -375,15 +381,11 @@ def search_events():
     print("")
     print("  Search results:")
     print("  -------------------------------------------------------------------------")
-    for event in results:
-        event_id = event[0]
-        title = event[1]
-        event_date = event[2]
-        event_time = format_time(event[3])
-        category_name = event[6]
-        created_by = event[7] if len(event) > 7 and event[7] else "Planner"
-        current_status = get_event_status(event[5], event_date, today).upper()
-        print(f"  #{event_id} | {title} | {event_date} {event_time} | {category_name} | {current_status} | Owner: {created_by}")
+    for row in raw_results:
+        ev = Event.from_row(row)
+        formatted_time = format_time(ev.event_time)
+        current_status = get_event_status(ev.status, ev.event_date, today).upper()
+        print(f"  #{ev.id} | {ev.title} | {ev.event_date} {formatted_time} | {ev.category_name} | {current_status} | Owner: {ev.owner}")
     print("  -------------------------------------------------------------------------")
     print("")
 
