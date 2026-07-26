@@ -158,10 +158,10 @@ def email_reminder_loop():
 
                 minutes_left = (event_dt - now).total_seconds() / 60
 
-                key_60 = str(event_id) + "_60"
-                key_30 = str(event_id) + "_30"
+                tag_1hour = str(event_id) + "_1hour"
+                tag_30min = str(event_id) + "_30min"
 
-                if 55 <= minutes_left <= 65 and key_60 not in emailed_events:
+                if 55 <= minutes_left <= 65 and tag_1hour not in emailed_events:
                     attendee_emails = db.get_attendee_emails(event_id)
                     for one_email in attendee_emails:
                         ReminderService.send_email(
@@ -169,9 +169,9 @@ def email_reminder_loop():
                             f"TaskFlow Reminder: {title} in 1 hour",
                             f"Hi there!\n\nThis is a reminder from TaskFlow.\n\n{owner_name}'s event '{title}' is starting in about 1 hour at {raw_time}.\n\nPlease remind {owner_name} so they don't forget!\n\nBest regards"
                         )
-                    emailed_events.add(key_60)
+                    emailed_events.add(tag_1hour)
 
-                if 25 <= minutes_left <= 35 and key_30 not in emailed_events:
+                if 25 <= minutes_left <= 35 and tag_30min not in emailed_events:
                     attendee_emails = db.get_attendee_emails(event_id)
                     for one_email in attendee_emails:
                         ReminderService.send_email(
@@ -179,7 +179,7 @@ def email_reminder_loop():
                             f"TaskFlow Reminder: {title} in 30 minutes!",
                             f"Hi there!\n\nURGENT reminder from TaskFlow!\n\n{owner_name}'s event '{title}' is starting in about 30 minutes at {raw_time}.\n\nPlease remind {owner_name} NOW!\n\nBest regards"
                         )
-                    emailed_events.add(key_30)
+                    emailed_events.add(tag_30min)
         except:
             pass
         time.sleep(60)
