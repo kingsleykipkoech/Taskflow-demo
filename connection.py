@@ -88,7 +88,11 @@ def get_all_categories():
 def get_category_id(name):
     cursor.execute("SELECT id FROM categories WHERE name = %s", (name,))
     row = cursor.fetchone()
-    return row[0] if row else None
+    if row:
+        return row[0]
+    cursor.execute("INSERT INTO categories (name) VALUES (%s)", (name,))
+    connection.commit()
+    return cursor.lastrowid
 
 
 def add_category(name):

@@ -659,7 +659,7 @@ def import_ics():
         print("  Could not read file.")
         return
 
-    others_category_id = db.get_category_id("Others")
+    imports_category_id = db.get_category_id("Imports")
     title = ""
     event_date = ""
     event_time = "00:00"
@@ -683,7 +683,7 @@ def import_ics():
 
         elif line.startswith("END:VEVENT"):
             if title != "" and event_date != "":
-                db.add_event(title, event_date, event_time, "Imported from calendar", others_category_id)
+                db.add_event(title, event_date, event_time, "Imported from calendar", imports_category_id, CURRENT_USER)
                 imported_count = imported_count + 1
             title = ""
             event_date = ""
