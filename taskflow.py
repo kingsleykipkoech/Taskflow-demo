@@ -2,6 +2,8 @@ import sys
 import os
 import calendar
 import smtplib
+import threading
+import time
 from datetime import date, datetime, timedelta
 import connection as db
 
@@ -99,9 +101,8 @@ def send_email(to_email, subject, body):
 
 def check_upcoming():
     today = str(date.today())
-    tomorrow = str(date.today() + timedelta(days=1))
     current_time = datetime.now().strftime("%H:%M")
-    events = db.get_events_on_dates(today, tomorrow)
+    events = db.get_events_on_dates(today, today)
     upcoming = []
     for event in events:
         event_date = event[2]
@@ -110,7 +111,7 @@ def check_upcoming():
 
         if status == "done":
             continue
-        if event_date == today and event_time != "ALL DAY" and event_time < current_time:
+        if event_time != "ALL DAY" and event_time < current_time:
             continue
         upcoming.append(event)
 
@@ -119,28 +120,69 @@ def check_upcoming():
 
     print("")
     print("  -----------------------------------------")
-    print("             Upcoming Reminders!           ")
+    print("          Today's Upcoming Events!         ")
     print("  -----------------------------------------")
     for event in upcoming:
-        event_id = event[0]
         title = event[1]
-        event_date = event[2]
         event_time = format_time(event[3])
-        when = "TODAY" if event_date == today else "TOMORROW"
-        print(f"   • {title} ({when} at {event_time})")
+        print(f"   • {title} (TODAY at {event_time})")
 
-        message = f"{title} is happening {when} at {event_time}"
+        message = f"{title} is happening TODAY at {event_time}"
         ReminderService.notify_desktop("TaskFlow Reminder", message)
-
-        owner_name = event[7] if len(event) > 7 and event[7] else "Planner"
-        attendee_emails = db.get_attendee_emails(event_id)
-        for one_email in attendee_emails:
-            ReminderService.send_email(
-                one_email,
-                f"TaskFlow Reminder: {owner_name}'s Event '{title}'",
-                f"Hi there!\n\nThis is an automated reminder from TaskFlow.\n\nYour teammate {owner_name} has an upcoming event:\nEvent: {title}\nWhen: {when}\nTime: {event_time}\n\nPlease reach out and remind {owner_name} so they don't forget\n\nBest regards"
-            )
     print("  -----------------------------------------")
+
+
+emailed_events = set()
+
+
+def email_reminder_loop():
+    while True:
+        try:
+            today = str(date.today())
+            now = datetime.now()
+            events = db.get_events_on_dates(today, today)
+            for event in events:
+                event_id = event[0]
+                title = event[1]
+                raw_time = format_time(event[3])
+                status = event[4]
+                owner_name = event[5] if len(event) > 5 and event[5] else "Planner"
+
+                if status == "done" or raw_time == "ALL DAY":
+                    continue
+
+                try:
+                    event_dt = datetime.strptime(today + " " + raw_time, "%Y-%m-%d %H:%M")
+                except:
+                    continue
+
+                minutes_left = (event_dt - now).total_seconds() / 60
+
+                key_60 = str(event_id) + "_60"
+                key_30 = str(event_id) + "_30"
+
+                if 55 <= minutes_left <= 65 and key_60 not in emailed_events:
+                    attendee_emails = db.get_attendee_emails(event_id)
+                    for one_email in attendee_emails:
+                        ReminderService.send_email(
+                            one_email,
+                            f"TaskFlow Reminder: {title} in 1 hour",
+                            f"Hi there!\n\nThis is a reminder from TaskFlow.\n\n{owner_name}'s event '{title}' is starting in about 1 hour at {raw_time}.\n\nPlease remind {owner_name} so they don't forget!\n\nBest regards"
+                        )
+                    emailed_events.add(key_60)
+
+                if 25 <= minutes_left <= 35 and key_30 not in emailed_events:
+                    attendee_emails = db.get_attendee_emails(event_id)
+                    for one_email in attendee_emails:
+                        ReminderService.send_email(
+                            one_email,
+                            f"TaskFlow Reminder: {title} in 30 minutes!",
+                            f"Hi there!\n\nURGENT reminder from TaskFlow!\n\n{owner_name}'s event '{title}' is starting in about 30 minutes at {raw_time}.\n\nPlease remind {owner_name} NOW!\n\nBest regards"
+                        )
+                    emailed_events.add(key_30)
+        except:
+            pass
+        time.sleep(60)
 
 
 def send_reminders():
@@ -314,10 +356,13 @@ def add_event():
     print("")
     print("  Event added successfully!")
     print("")
-    emails_input = input("  Add a person/people to remind you: ").strip()
+    emails_input = input("  Add a person/people to remind you (comma or space separated): ").strip()
     if emails_input != "":
+        emails_input = emails_input.replace(",", " ")
         for one_email in emails_input.split():
-            db.add_attendee(new_event_id, one_email)
+            one_email = one_email.strip()
+            if one_email != "":
+                db.add_attendee(new_event_id, one_email)
         print("  Emails added.")
 
 
@@ -575,12 +620,15 @@ def edit_event():
         db.mark_event_done(event_id)
         print("  Marked done.")
     elif choice == "2":
-        emails_input = input("  Enter participant emails (space separated): ").strip()
+        emails_input = input("  Enter participant emails (comma or space separated): ").strip()
         if emails_input == "":
             print("  No emails entered.")
             return
+        emails_input = emails_input.replace(",", " ")
         for one_email in emails_input.split():
-            db.add_attendee(event_id, one_email)
+            one_email = one_email.strip()
+            if one_email != "":
+                db.add_attendee(event_id, one_email)
         print(f"  Participants added to: {title}")
     else:
         print("  Nothing changed.")
@@ -737,6 +785,8 @@ if __name__ == "__main__":
         role = pick_role()
         select_user_identity()
         check_upcoming()
+        reminder_thread = threading.Thread(target=email_reminder_loop, daemon=True)
+        reminder_thread.start()
         if role == "planner":
             planner_menu()
         else:
