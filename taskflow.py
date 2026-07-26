@@ -55,9 +55,8 @@ def load_email_config():
 
 def configure_email():
     print("")
-    print("  +-----------------------------------------+")
-    print("  |       Configure Email Reminders         |")
-    print("  +-----------------------------------------+")
+    print("       Configure Email Reminders        ")
+    print("  ---------------------------------------")
     print("")
     email_input = input("  Enter your Gmail address (or Enter to disable): ").strip()
     if email_input == "":
@@ -201,9 +200,8 @@ def select_user_identity():
     while True:
         all_members = db.get_all_members()
         print("")
-        print("  +-----------------------------+")
-        print("  |      Who are you?           |")
-        print("  +-----------------------------+")
+        print("             Who are you?              ")
+        print("  ---------------------------------------")
         number = 1
         for member in all_members:
             print(f"   {number}) {member[1]}")
@@ -265,11 +263,8 @@ def select_user_identity():
 
 def pick_role():
     print("")
-    print("  +-----------------------------------------+")
-    print("  |                                         |")
-    print("  |      Welcome to TaskFlow Planner        |")
-    print("  |                                         |")
-    print("  +-----------------------------------------+")
+    print("       Welcome to TaskFlow Planner       ")
+    print("  ---------------------------------------")
     print("")
     print("  Choose your role:")
     print("  " + "-" * 41)
@@ -334,9 +329,8 @@ def choose_category():
 
 def add_event():
     print("")
-    print("  +-----------------------------+")
-    print("  |       Add New Event          |")
-    print("  +-----------------------------+")
+    print("            Add New Event            ")
+    print("  ---------------------------------------")
     print("")
     title = input("  Event title (or Enter to cancel): ").strip()
     if title == "" or title.lower() == "cancel":
@@ -705,22 +699,19 @@ def import_ics():
 def planner_menu():
     while True:
         print("")
-        print("  +-----------------------------------------+")
-        print("  |      TaskFlow Planner  [Planner]        |")
-        print("  +-----------------------------------------+")
-        print("  |                                         |")
-        print("  |  1) Add event                           |")
-        print("  |  2) View all events and calendar        |")
-        print("  |  3) View calendar by user               |")
-        print("  |  4) Search events                       |")
-        print("  |  5) Edit event                          |")
-        print("  |  6) Delete event                        |")
-        print("  |  7) Import events from .ics file        |")
-        print("  |  8) Manage categories                   |")
-        print("  |  9) Configure email reminders           |")
-        print("  |  0) Exit                                |")
-        print("  |                                         |")
-        print("  +-----------------------------------------+")
+        print("      TaskFlow Planner  [Planner]       ")
+        print("  ---------------------------------------")
+        print("  1) Add event")
+        print("  2) View all events and calendar")
+        print("  3) View calendar by user")
+        print("  4) Search events")
+        print("  5) Edit event")
+        print("  6) Delete event")
+        print("  7) Import events from .ics file")
+        print("  8) Manage categories")
+        print("  9) Configure email reminders")
+        print("  0) Exit")
+        print("  ---------------------------------------")
         print("")
         choice = input("  Choose: ").strip()
         if choice == "1":
@@ -751,16 +742,13 @@ def planner_menu():
 def viewer_menu():
     while True:
         print("")
-        print("  +-----------------------------------------+")
-        print("  |      TaskFlow Planner  [Viewer]         |")
-        print("  +-----------------------------------------+")
-        print("  |                                         |")
-        print("  |  1) View all events and calendar        |")
-        print("  |  2) View calendar by user               |")
-        print("  |  3) Search events                       |")
-        print("  |  0) Exit                                |")
-        print("  |                                         |")
-        print("  +-----------------------------------------+")
+        print("       TaskFlow Planner  [Viewer]       ")
+        print("  ---------------------------------------")
+        print("  1) View all events and calendar")
+        print("  2) View calendar by user")
+        print("  3) Search events")
+        print("  0) Exit")
+        print("  ---------------------------------------")
         print("")
         choice = input("  Choose: ").strip()
         if choice == "1":
